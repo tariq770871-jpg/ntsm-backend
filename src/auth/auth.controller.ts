@@ -1,5 +1,6 @@
 import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
 import { AuthService } from './auth.service';
+import { UserRole } from '../users/user.entity';
 
 class LoginDto {
   phone: string;
@@ -10,7 +11,7 @@ class RegisterDto {
   name: string;
   phone: string;
   password: string;
-  role: string;
+  role: UserRole;
 }
 
 @Controller('auth')
