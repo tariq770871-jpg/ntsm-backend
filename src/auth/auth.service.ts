@@ -27,11 +27,12 @@ export class AuthService {
 
   async login(phone: string, password: string): Promise<LoginResult> {
     const user = await this.validateUser(phone, password);
-    if (!user) throw new UnauthorizedException('Invalid credentials');
+    if (!user) throw new UnauthorizedException('رقم الهاتف أو كلمة المرور غير صحيحة');
 
     const payload = { sub: user.id, role: user.role };
     return {
-      access_token: this.jwtService.sign(payload),
+      // هنا قمنا بزيادة الصلاحية إلى 7 أيام
+      access_token: this.jwtService.sign(payload, { expiresIn: '7d' }),
       user: {
         id: user.id,
         name: user.name,
