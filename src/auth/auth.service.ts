@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { UsersService } from '../users/users.service';
 import { User } from '../users/user.entity';
+import { UserRole } from '../users/user.entity';
 
 export interface LoginResult {
   access_token: string;
@@ -40,7 +41,7 @@ export class AuthService {
     };
   }
 
-  async register(name: string, phone: string, password: string, role: string): Promise<LoginResult> {
+  async register(name: string, phone: string, password: string, role: UserRole): Promise<LoginResult> {
     const hashed = await bcrypt.hash(password, 12);
     const user = await this.usersService.create({ name, phone, passwordHash: hashed, role });
     return this.login(phone, password);
