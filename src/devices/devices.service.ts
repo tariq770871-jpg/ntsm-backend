@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, LessThan } from 'typeorm';
+import { Repository, LessThan, IsNull } from 'typeorm';
 import { Device, DeviceStatus } from './device.entity';
 import { DeviceStatusHistory } from './device-status-history.entity';
 
@@ -44,7 +44,7 @@ export class DevicesService {
     seventyTwoDaysAgo.setDate(seventyTwoDaysAgo.getDate() - 72);
 
     const result = await this.deviceRepo.update(
-      { status: 'offline', lastSeenAt: LessThan(seventyTwoDaysAgo), archivedAt: null },
+      { status: 'offline', lastSeenAt: LessThan(seventyTwoDaysAgo), archivedAt: IsNull() },
       { status: 'archived', archivedAt: new Date() },
     );
 
