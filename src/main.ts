@@ -7,7 +7,6 @@ import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-
   app.use(helmet());
   app.use(compression());
   app.enableCors({
@@ -15,11 +14,10 @@ async function bootstrap() {
     credentials: true,
   });
   app.useGlobalPipes(new ValidationPipe({
-    whitelist: false,
+    whitelist: true,
+    forbidNonWhitelisted: true,
     transform: true,
-    forbidNonWhitelisted: false,
   }));
-
   const config = new DocumentBuilder()
     .setTitle('NOC System API')
     .setDescription('Network Operations Center API')
@@ -28,9 +26,7 @@ async function bootstrap() {
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);
-
   const port = process.env.PORT || 3000;
   await app.listen(port);
-  console.log(`NOC Backend running on port ${port}`);
 }
 bootstrap();

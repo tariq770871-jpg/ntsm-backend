@@ -1,71 +1,30 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, LessThan, IsNull } from 'typeorm';
-import { Device, DeviceStatus } from './device.entity';
-import { DeviceStatusHistory } from './device-status-history.entity';
+import { Repository } from 'typeorm';
+import { Device } from './device.entity';
 
 @Injectable()
 export class DevicesService {
   constructor(
-    @InjectRepository(Device) private deviceRepo: Repository<Device>,
-    @InjectRepository(DeviceStatusHistory) private historyRepo: Repository<DeviceStatusHistory>,
+    @InjectRepository(Device)
+    private devicesRepo: Repository<Device>,
   ) {}
 
-  async findAll(): Promise<Device[]> {
-    return this.deviceRepo.find({ relations: ['assignedEngineer'] });
+  async findAll(page: number = 1, limit: number = 10) {
+    const skip = (page - 1) * limit;
+    const [data, total] = await this.devicesRepo.findAndCount({ skip, take: limit, order: { id: 'DESC' } });
+    return { data, meta: { total, page, limit, totalPages: Math.ceil(total / limit) } };
   }
 
-  async findById(id: string): Promise<Device> {
-    const device = await this.deviceRepo.findOne({ where: { id }, relations: ['assignedEngineer'] });
-    if (!device) throw new NotFoundException('Device not found');
-    return device;
-  }
-
-  async findByEngineer(engineerId: string): Promise<Device[]> {
-    return this.deviceRepo.find({ where: { assignedEngineerId: engineerId }, relations: ['assignedEngineer'] });
-  }
-
-  async create(data: Partial<Device>): Promise<Device> {
-    const device = this.deviceRepo.create(data);
-    return this.deviceRepo.save(device);
-  }
-
-  async update(id: string, data: Partial<Device>): Promise<Device> {
-    await this.deviceRepo.update(id, data);
-    return this.findById(id);
-  }
-
-  async delete(id: string): Promise<void> {
-    await this.deviceRepo.delete(id);
-  }
-
-  async archiveOldDevices(): Promise<number> {
-    const seventyTwoDaysAgo = new Date();
-    seventyTwoDaysAgo.setDate(seventyTwoDaysAgo.getDate() - 72);
-
-    const result = await this.deviceRepo.update(
-      { status: 'offline', lastSeenAt: LessThan(seventyTwoDaysAgo), archivedAt: IsNull() },
-      { status: 'archived', archivedAt: new Date() },
-    );
-
-    return result.affected || 0;
-  }
-
-  async getHistory(deviceId: string, limit: number = 100): Promise<DeviceStatusHistory[]> {
-    return this.historyRepo.find({
-      where: { deviceId },
-      order: { checkedAt: 'DESC' },
-      take: limit,
-    });
-  }
-
-  async getStats(): Promise<{ total: number; online: number; offline: number; archived: number }> {
-    const [total, online, offline, archived] = await Promise.all([
-      this.deviceRepo.count(),
-      this.deviceRepo.count({ where: { status: 'online' } }),
-      this.deviceRepo.count({ where: { status: 'offline' } }),
-      this.deviceRepo.count({ where: { status: 'archived' } }),
-    ]);
+  async getStats() {
+    const total = await this.devicesRepo.count();
+    const online = await this.devicesRepo.count({ where: { status: 'online' } });
+    const offline = await this.devicesRepo.count({ where: { status: 'offline' } });
+    const archived = await this.devicesRepo.count({ where: { status: 'archived' } });
     return { total, online, offline, archived };
   }
+
+  create(data: any) { return this.devicesRepo.save(data); }
+  update(id: string, data: any) { return this.devicesRepo.update(id, data); }
+  remove(id: string) { return this.devicesRepo.delete(id); }
 }

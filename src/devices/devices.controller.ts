@@ -1,56 +1,34 @@
-import { Controller, Get, Post, Body, Param, Delete, Put, UseGuards, Query } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
+import { Controller, Get, Post, Patch, Delete, Body, Param, Query } from '@nestjs/common';
 import { DevicesService } from './devices.service';
-import { Device } from './device.entity';
+import { CreateDeviceDto } from './dto/create-device.dto';
+import { UpdateDeviceDto } from './dto/update-device.dto';
 
 @Controller('devices')
-@UseGuards(AuthGuard('jwt'))
 export class DevicesController {
   constructor(private devicesService: DevicesService) {}
 
   @Get()
-  async findAll(): Promise<Device[]> {
-    return this.devicesService.findAll();
+  findAll(@Query('page') page: number = 1, @Query('limit') limit: number = 10) {
+    return this.devicesService.findAll(+page, +limit);
   }
 
   @Get('stats')
-  async getStats() {
+  getStats() {
     return this.devicesService.getStats();
   }
 
-  @Get(':id')
-  async findOne(@Param('id') id: string): Promise<Device> {
-    return this.devicesService.findById(id);
-  }
-
-  @Get('engineer/:engineerId')
-  async findByEngineer(@Param('engineerId') engineerId: string): Promise<Device[]> {
-    return this.devicesService.findByEngineer(engineerId);
-  }
-
   @Post()
-  async create(@Body() data: Partial<Device>): Promise<Device> {
-    return this.devicesService.create(data);
+  create(@Body() body: CreateDeviceDto) {
+    return this.devicesService.create(body);
   }
 
-  @Put(':id')
-  async update(@Param('id') id: string, @Body() data: Partial<Device>): Promise<Device> {
-    return this.devicesService.update(id, data);
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() body: UpdateDeviceDto) {
+    return this.devicesService.update(id, body);
   }
 
   @Delete(':id')
-  async delete(@Param('id') id: string): Promise<void> {
-    return this.devicesService.delete(id);
-  }
-
-  @Get(':id/history')
-  async getHistory(@Param('id') id: string, @Query('limit') limit: number): Promise<any[]> {
-    return this.devicesService.getHistory(id, limit || 100);
-  }
-
-  @Post('archive/run')
-  async runArchive(): Promise<{ archived: number }> {
-    const count = await this.devicesService.archiveOldDevices();
-    return { archived: count };
+  remove(@Param('id') id: string) {
+    return this.devicesService.remove(id);
   }
 }
