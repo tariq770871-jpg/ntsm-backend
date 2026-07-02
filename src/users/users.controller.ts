@@ -10,7 +10,7 @@ export class UsersController {
 
   @Get('me')
   async getMe(@Req() req: any) {
-    return this.usersService.findById(req.user.sub);
+    return this.usersService.findById(req.user.userId);
   }
 
   @Get()
