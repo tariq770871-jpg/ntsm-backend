@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Delete, Put, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, Put, UseGuards, Req } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { UsersService } from './users.service';
 import { User } from './user.entity';
@@ -7,6 +7,11 @@ import { User } from './user.entity';
 @UseGuards(AuthGuard('jwt'))
 export class UsersController {
   constructor(private usersService: UsersService) {}
+
+  @Get('me')
+  async getMe(@Req() req: any) {
+    return this.usersService.findById(req.user.sub);
+  }
 
   @Get()
   async findAll(): Promise<User[]> {
